@@ -27,11 +27,20 @@ import org.jenkinsci.plugins.configfiles.groovy.GroovyScript
 script_approval = Jenkins.instance.getExtensionList('org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval')[0]
 config_files = Jenkins.instance.getExtensionList(GlobalConfigFiles)[0]
 
-jenkinsfile_script = '''
-buildViaJervis()
-'''.trim()
+if(!binding.hasVariable('jenkinsfile_script')) {
+    jenkinsfile_script = ''
+}
+if(!(jenkinsfile_script instanceof String)) {
+    throw new Exception('jenkinsfile_script must be a String.')
+}
 
-if(!config_files.getById('Jenkinsfile')) {
+jenkinsfile_script = jenkinsfile_script.trim()
+
+if(!jenkinsfile_script) {
+    return
+}
+
+if(!config_files.getById('Jenkinsfile') || (config_files.getById('Jenkinsfile').content != jenkinsfile_script)) {
 	//create global config
 	GroovyScript new_config = new GroovyScript('Jenkinsfile', 'Global Jenkinsfile', '', jenkinsfile_script)
 	config_files.save(new_config)
